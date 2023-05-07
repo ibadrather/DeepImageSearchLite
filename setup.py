@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="DeepSearchLite",
-    version="0.1.0",
+    version="0.1.1",
     author="Ibad Rather",
     author_email="ibad.rather.ir@gmail.com",
     description="A package for image similarity search",
