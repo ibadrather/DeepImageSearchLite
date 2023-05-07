@@ -324,3 +324,43 @@ class SearchSetup:
             image_data_with_features_pkl(self.metadata_dir, self.model_name)
         )
         self.f = len(self.image_data["features"][0])
+
+
+    def _get_query_vector_from_image(self, image: Image) -> np.ndarray:
+        query_vector = self._extract(image)
+        return query_vector
+    
+    def get_similar_images_from_image(
+        self, image: Image, number_of_images: int = 10
+    ) -> Dict[int, str]:
+        """
+        Returns the most similar images to a given query image according to the indexed image features.
+
+        Parameters:
+        -----------
+        image : Image
+            The query image.
+        number_of_images : int, optional (default=10)
+            The number of most similar images to the query image to be returned.
+        """
+        query_vector = self._get_query_vector_from_image(image)
+        img_dict = self._search_by_vector(query_vector, number_of_images)
+        return img_dict
+    
+    def get_similar_images_list_from_image(
+        self, image: Image, number_of_images: int = 10
+    ) -> List[str]:
+        """
+        Returns the most similar images to a given query image according to the indexed image features.
+
+        Parameters:
+        -----------
+        image : Image
+            The query image.
+        number_of_images : int, optional (default=10)
+            The number of most similar images to the query image to be returned.
+        """
+        img_dict = self.get_similar_images_from_image(image, number_of_images)
+        similar_n_images =  list(img_dict.values())
+        similar_n_images_names = [os.path.basename(image_path) for image_path in similar_n_images]
+        return similar_n_images_names
