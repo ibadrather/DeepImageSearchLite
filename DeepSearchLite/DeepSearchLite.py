@@ -4,7 +4,7 @@ from PIL import Image
 from tqdm import tqdm
 import numpy as np
 import faiss
-from typing import List, Union, Dict, Callable, Optional
+from typing import List, Union, Dict, Callable, Optional, Any
 
 
 def image_data_with_features_pkl(metadata_dir, model_name):
@@ -28,31 +28,69 @@ def image_features_vectors_idx(metadata_dir, model_name):
 
 
 class LoadData:
-    """A class for loading data from single/multiple folders or a CSV file"""
+    """A class for loading data from single/multiple folders or a CSV file."""
 
-    def __init__(self):
+    def __init__(self, data_type: str = 'image'):
         """
-        Initializes an instance of LoadData class
-        """
-        pass
+        Initializes an instance of LoadData class.
 
-    def from_folder(self, folder_list: list):
+        Parameters:
+        -----------
+        data_type : str, optional (default='image')
+            The type of data to load. Supported types: 'image', 'video', 'text', etc.
         """
-        Adds images from the specified folders to the image_list.
+        self.data_type = data_type
+
+    def from_folder(self, folder_list: list) -> List[str]:
+        """
+        Adds data files from the specified folders to the data_list.
 
         Parameters:
         -----------
         folder_list : list
-            A list of paths to the folders containing images to be added to the image_list.
+            A list of paths to the folders containing data files to be added to the data_list.
+
+        Returns:
+        --------
+        data_paths : list
+            A list of paths to the loaded data files.
         """
         self.folder_list = folder_list
-        image_path = []
+        data_paths = []
         for folder in self.folder_list:
             for root, dirs, files in os.walk(folder):
                 for file in files:
-                    if file.lower().endswith((".png", ".jpg", ".jpeg", ".gif", ".bmp")):
-                        image_path.append(os.path.join(root, file))
-        return image_path
+                    if self._is_supported_file(file):
+                        data_paths.append(os.path.join(root, file))
+        return data_paths
+
+    def _is_supported_file(self, file: str) -> bool:
+        """
+        Checks if a file has a supported extension based on the data_type.
+
+        Parameters:
+        -----------
+        file : str
+            The file name to check for supported extensions.
+
+        Returns:
+        --------
+        bool
+            True if the file has a supported extension, False otherwise.
+        """
+        if self.data_type == 'image':
+            return file.lower().endswith((".png", ".jpg", ".jpeg", ".gif", ".bmp"))
+        
+        # TODO: Add other data types (e.g., video, text, etc.) and their supported extensions
+
+        # Add other data types (e.g., video, text, etc.) and their supported extensions
+        # elif self.data_type == 'video':
+        #     return file.lower().endswith((".mp4", ".avi", ".mov", ".mkv"))
+        # elif self.data_type == 'text':
+        #     return file.lower().endswith((".txt", ".csv", ".tsv", ".json"))
+        else:
+            raise ValueError(f"Unsupported data type: {self.data_type}")
+
 
     def from_csv(self, csv_file_path: str, images_column_name: str):
         """
@@ -72,7 +110,7 @@ class LoadData:
 
 class SearchSetup:
     """A class for setting up and running image similarity search."""
-
+    # TODO: Make more generic for other data types (e.g., video, text, etc.)
     def __init__(
         self,
         image_list: list,
@@ -82,6 +120,7 @@ class SearchSetup:
         metadata_dir: Optional[str] = "metadata_dir",
         feature_extractor_name: Optional[str] = "feature_extractor",
         mode: str = "index",
+        object_loader: Optional[Callable] = None,
     ):
         """
         Parameters:
@@ -112,6 +151,11 @@ class SearchSetup:
 
         self.feature_extractor = feature_extractor
         self.dim_reduction = dim_reduction
+        
+        if object_loader is None:
+            self.object_loader = self._image_object_loader
+        else:
+            self.object_loader = object_loader
 
         # Create metadata directory
         self.metadata_dir = metadata_dir
@@ -123,14 +167,30 @@ class SearchSetup:
             self.load_metadata()
         else:
             raise ValueError("Invalid mode. Must be 'index' or 'search'.")
+        
+    def _image_object_loader(self, image_path: str, image_size: tuple = (224, 224)) -> Image.Image:
+        """Load an image from a file path."""
+        return Image.open(image_path).resize(image_size).convert("RGB")
 
-    def _extract(self, img: Image.Image) -> np.ndarray:
-        """Extract features from the image."""
-        # Resize and convert the image
-        img = img.resize((224, 224))
-        img = img.convert("RGB")
 
-        feature = self.feature_extractor(img)
+    def _extract(self, query_object) -> np.ndarray:
+        """
+        Extracts features from the query object using the feature extractor, 
+        performs dimensionality reduction if applicable, and normalizes the feature vector.
+
+        Parameters:
+        -----------
+        query_object :
+            The query object.
+
+        Returns:
+        --------
+        feature : np.ndarray
+            The normalized feature vector.
+        """
+
+        # Extract features from the query object
+        feature = self.feature_extractor(query_object)
 
         # Normalize the feature vector
         feature = feature.flatten()
@@ -141,13 +201,14 @@ class SearchSetup:
 
         return feature / np.linalg.norm(feature)
 
+
     def _get_feature(self, image_data: List[str]) -> List[Union[np.ndarray, None]]:
         self.image_data = image_data
         features = []
         for img_path in tqdm(self.image_data):  # Iterate through images
             # Extract features from the image
             try:
-                feature = self._extract(img=Image.open(img_path))
+                feature = self._extract(self.object_loader(img_path))
                 features.append(feature)
             except Exception as e:
                 print(f"Error processing image {img_path}: {e}")
@@ -230,8 +291,8 @@ class SearchSetup:
         for new_image_path in tqdm(new_image_paths):
             # Extract features from the new image
             try:
-                img = Image.open(new_image_path)
-                feature = self._extract(img)
+                query_object = self.object_loader(new_image_path)
+                feature = self._extract(query_object)
             except Exception as e:
                 print(f"\033[91m Error extracting features from the new image: {e}")
                 continue
@@ -264,45 +325,7 @@ class SearchSetup:
         D, I = index.search(np.array([v], dtype=np.float32), n)
         return dict(zip(I[0], self.image_data.iloc[I[0]]["images_paths"].to_list()))
 
-    def _get_query_vector(self, image_path: str) -> np.ndarray:
-        img = Image.open(image_path)
-        query_vector = self._extract(img)
-        return query_vector
-
-    def get_similar_images(
-        self, image_path: str, number_of_images: int = 10
-    ) -> Dict[int, str]:
-        """
-        Returns the most similar images to a given query image according to the indexed image features.
-
-        Parameters:
-        -----------
-        image_path : str
-            The path to the query image.
-        number_of_images : int, optional (default=10)
-            The number of most similar images to the query image to be returned.
-        """
-        query_vector = self._get_query_vector(image_path)
-        img_dict = self._search_by_vector(query_vector, number_of_images)
-        return img_dict
-
-    def get_similar_images_list(
-        self, image_path: str, number_of_images: int = 10
-    ) -> List[str]:
-        """
-        Returns the most similar images to a given query image according to the indexed image features.
-
-        Parameters:
-        -----------
-        image_path : str
-            The path to the query image.
-        number_of_images : int, optional (default=10)
-            The number of most similar images to the query image to be returned.
-        """
-        img_dict = self.get_similar_images(image_path, number_of_images)
-        similar_n_images =  list(img_dict.values())
-        similar_n_images_names = [os.path.basename(image_path) for image_path in similar_n_images]
-        return similar_n_images_names
+    
 
     def get_image_metadata_file(self) -> pd.DataFrame:
         """
@@ -324,43 +347,84 @@ class SearchSetup:
             image_data_with_features_pkl(self.metadata_dir, self.model_name)
         )
         self.f = len(self.image_data["features"][0])
+    
+    # Retrieving Methods
 
-
-    def _get_query_vector_from_image(self, image: Image) -> np.ndarray:
-        query_vector = self._extract(image)
+    def _get_query_vector(self, item) -> np.ndarray:
+        query_vector = self._extract(item)
         return query_vector
-    
-    def get_similar_images_from_image(
-        self, image: Image, number_of_images: int = 10
-    ) -> Dict[int, str]:
+
+
+    def get_similar_items(
+        self,
+        item: Union[str, Any],
+        number_of_items: int = 10,
+        return_paths: bool = True,
+    ) -> Union[List[str], Dict[int, str]]:
         """
-        Returns the most similar images to a given query image according to the indexed image features.
+        Given a query item or the path to a query item, this method returns the most
+        similar items according to the indexed features. The item can be any type
+        of object (e.g., image, video, text, etc.) as long as it is compatible with
+        the feature extraction and indexing methods used in the class.
 
         Parameters:
         -----------
-        image : Image
-            The query image.
-        number_of_images : int, optional (default=10)
-            The number of most similar images to the query image to be returned.
-        """
-        query_vector = self._get_query_vector_from_image(image)
-        img_dict = self._search_by_vector(query_vector, number_of_images)
-        return img_dict
-    
-    def get_similar_images_list_from_image(
-        self, image: Image, number_of_images: int = 10
-    ) -> List[str]:
-        """
-        Returns the most similar images to a given query image according to the indexed image features.
+        item : Union[str, Any]
+            The query item or the path to the query item. If a string is provided,
+            it is assumed to be a path to a file. If a non-string object is provided,
+            it is assumed to be the query item itself. The item can be any type of
+            object (e.g., image, video, text, etc.) as long as it is compatible with
+            the feature extraction and indexing methods used in the class.
+        number_of_items : int, optional (default=10)
+            The number of most similar items to the query item to be returned. The
+            method will return up to this number of items, depending on the
+            availability of similar items in the index.
+        return_paths : bool, optional (default=True)
+            If True, return a list of paths to the most similar items.
+            If False, return a dictionary mapping indices to paths of the most
+            similar items. The indices are based on the order of the items in the
+            index and can be used to reference specific items.
 
-        Parameters:
-        -----------
-        image : Image
-            The query image.
-        number_of_images : int, optional (default=10)
-            The number of most similar images to the query image to be returned.
+        Returns:
+        --------
+        Union[List[str], Dict[int, str]]
+            The most similar items to the query item, either as a list of paths or
+            as a dictionary mapping indices to paths. The paths represent the
+            location of the similar items in the file system. If the original items
+            are not stored as files, these paths can be used as identifiers or
+            references to the items in a custom storage system.
+
+        Raises:
+        -------
+        ValueError
+            If the provided item is a string but not a valid file path, a ValueError
+            is raised with a message indicating that the item is not a valid file path.
         """
-        img_dict = self.get_similar_images_from_image(image, number_of_images)
-        similar_n_images =  list(img_dict.values())
-        similar_n_images_names = [os.path.basename(image_path) for image_path in similar_n_images]
-        return similar_n_images_names
+        # We first load the item
+        if isinstance(item, str):  # If the item is a string, we assume it is a path to a file
+            if os.path.isfile(item):
+                item = self.object_loader(item)
+            else:
+                raise ValueError(f"Item {item} is not a valid file path.")
+
+        # We then extract the features from the item
+        query_vector = self._get_query_vector(item)
+
+        # We then search for the most similar items
+        item_dict = self._search_by_vector(query_vector, number_of_items)
+
+        # Now we return items according to the return_paths parameter
+        if return_paths:
+            return list(item_dict.values())
+
+        else:
+            return item_dict
+
+
+
+
+
+
+
+
+
