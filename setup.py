@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="DeepSearchLite",
-    version="0.1.1",
+    version="0.2.0",
     author="Ibad Rather",
     author_email="ibad.rather.ir@gmail.com",
     description="A package for image similarity search",
@@ -23,7 +23,7 @@ setup(
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
     ],
-    python_requires='>=3.8',
+    python_requires=">=3.8",
     install_requires=[
         "numpy",
         "pandas",

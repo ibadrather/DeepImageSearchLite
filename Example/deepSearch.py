@@ -10,48 +10,64 @@ from Example.FeatureExtractor import CustomFeatureExtractor
 os.system("clear")
 
 MODEL_PATH = "Example/feature_encoder.onnx"
-MODE = "search"
 IMAGES_DIR = "/home/ibad/Desktop/RevSearch/Car196_Combined/images/"
 
+MODE = "search"  # "index" or "search"
+
 # Load images from a folder
-image_list_all = LoadData(data_type="image").from_folder([IMAGES_DIR])
-image_list = image_list_all[:]
+image_list = LoadData(data_type="image").from_folder([IMAGES_DIR])
 
 print("Number of images: ", len(image_list))
 
-feature_extractor = CustomFeatureExtractor(
-    model_path=MODEL_PATH,
+# Initialize the custom feature extractor
+feature_extractor = CustomFeatureExtractor(model_path=MODEL_PATH)
+
+# Set up the search engine
+search_engine = SearchSetup(
+    item_list=image_list,
+    feature_extractor=feature_extractor,
+    dim_reduction=None,
+    metadata_dir="Example/metadata_dir",
+    feature_extractor_name="efficientnet_onnx",
+    mode=MODE,
+    item_loader=None,
 )
 
-search_engine = SearchSetup(
-        image_list = image_list,
-        feature_extractor=feature_extractor,
-        dim_reduction = None,
-        image_count = None,
-        metadata_dir = "Example/cars_dataset_metadata_dir",
-        feature_extractor_name = "efficientnet_onnx",
-        mode=MODE,
-    )
+# Example input image or path
+input_image_path = "Example/car.jpg"
 
-car_image_path="car.jpg"
-
+# Load input image
+input_image = Image.open(input_image_path).resize((224, 224))
 
 # Search by image
-car_image = Image.open(car_image_path).resize((224, 224))
-similar_n_images = search_engine.get_similar_items(
-    item=car_image,
+similar_images = search_engine.get_similar_items(
+    item=input_image,
     number_of_items=10,
     return_paths=True,
 )
 
-print("Similar Images by inputing an image: ", len(similar_n_images))
+print("Similar Images by inputing an image:", len(similar_images))
 
 # Search by path
-similar_n_images = search_engine.get_similar_items(
-    item=car_image_path,
+similar_images = search_engine.get_similar_items(
+    item=input_image_path,
     number_of_items=10,
     return_paths=True,
 )
 
-print("Similar Images by inputing a path: ", len(similar_n_images))
+print("Similar Images by inputing a path:", len(similar_images))
 
+# Add new images to the index
+search_engine.add_items_to_index(new_item_paths=[input_image_path])
+
+# Search by image again after adding the new image
+similar_images = search_engine.get_similar_items(
+    item=input_image,
+    number_of_items=10,
+    return_paths=True,
+)
+
+print(
+    "Similar Images by inputing an image after adding new image:", len(similar_images)
+)
+print(similar_images)
