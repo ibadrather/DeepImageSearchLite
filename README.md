@@ -64,8 +64,6 @@ There are two main modes available in the SearchSetup class: 'index' and 'search
     In summary, the index mode is used to build the metadata and index required for similarity search, while the search mode enables you to search for similar items in the indexed dataset. Make sure to use the same feature extractor, dimensionality reducer, and item loader in both modes to ensure compatibility and accurate search results.
 
 
-
-
 ## Contributing
 Contributions to DeepSearchLite are welcome! If you have an idea, bug report, or feature request, please open an issue on the [GitHub repository](https://github.com/ibadrather/DeepSearchLite). If you'd like to contribute code, please fork the repository and submit a pull request.
 
