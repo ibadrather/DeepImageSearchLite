@@ -1,6 +1,6 @@
 
-# DeepSearchLite
-DeepSearchLite is a lightweight and versatile package for finding similar items in a large collection of data, initially inspired by [DeepImageSearch](https://github.com/TechyNilesh/DeepImageSearch). It supports a variety of data types, such as images, text, or any other type of data that can be represented by feature vectors. All you need is a suitable encoder to convert the data into a feature vector, and DeepSearchLite will handle the rest, enabling you to perform similarity searches efficiently and effectively.
+# deep-search-lite
+deep-search-lite is a lightweight and versatile package for finding similar items in a large collection of data, initially inspired by [DeepImageSearch](https://github.com/TechyNilesh/DeepImageSearch). It supports a variety of data types, such as images, text, or any other type of data that can be represented by feature vectors. All you need is a suitable encoder to convert the data into a feature vector, and deep-search-lite will handle the rest, enabling you to perform similarity searches efficiently and effectively.
 
 ## Features
 * Supports various data types (images, text, etc.) as long as they can be represented by feature vectors
@@ -9,20 +9,20 @@ DeepSearchLite is a lightweight and versatile package for finding similar items 
 * Flexible and extensible with support for custom feature extraction, dimensionality reduction functions, and item loading functions
 * Add new items to the index without the need for re-indexing the entire dataset
 * Retrieve item metadata and perform search by providing either the item itself or a file path
- 
+
 ## Installation
-Install DeepSearchLite using pip:
+Install deep-search-lite using pip:
 ```bash
-    pip install DeepSearchLite
+    pip install deep-search-lite
 
 ```
 ## Quickstart
 
-To use DeepSearchLite, you need to provide a custom feature encoder that can convert your data into feature vectors. For example, let's say you have a collection of images, and you want to find similar images. You can use a pre-trained deep learning model as a feature encoder. Please refer to the [Example](./Example) folder for a complete example of setting up DeepSearchLite for image similarity search.
+To use deep-search-lite, you need to provide a custom feature encoder that can convert your data into feature vectors. For example, let's say you have a collection of images, and you want to find similar images. You can use a pre-trained deep learning model as a feature encoder. Please refer to the [Example](./Example) folder for a complete example of setting up deep-search-lite for image similarity search.
 For other types of data, you need to provide a suitable encoder that can convert the data into feature vectors and a compatible item loader function if necessary.
 
 ## Customization
-DeepSearchLite offers flexibility by allowing you to customize feature extraction, dimensionality reduction, and item loading functions to suit your specific use case. To incorporate your custom functions, provide them as arguments when initializing the `SearchSetup` instance:
+deep-search-lite offers flexibility by allowing you to customize feature extraction, dimensionality reduction, and item loading functions to suit your specific use case. To incorporate your custom functions, provide them as arguments when initializing the `SearchSetup` instance:
 
 ```python
 search_setup = SearchSetup(
@@ -41,7 +41,7 @@ In the example above:
 * `custom_dim_reduction` is an optional function that reduces the dimensionality of the feature vectors. Set it to `None` if you don't need dimensionality reduction.
 * `custom_item_loader` is a function that loads items from their file paths, ensuring compatibility with the feature extractor.
 
-By providing your custom functions, you can tailor DeepSearchLite to work with various data types and feature extraction techniques, enabling a more personalized and efficient similarity search experience.
+By providing your custom functions, you can tailor deep-search-lite to work with various data types and feature extraction techniques, enabling a more personalized and efficient similarity search experience.
 
 ## Usage
 You can use the provided methods in the `SearchSetup` class to index and search for similar items, add new items to the index, retrieve item metadata, and more. Check the class documentation for a detailed list of available methods and their usage.
@@ -65,9 +65,9 @@ There are two main modes available in the SearchSetup class: 'index' and 'search
 
 
 ## Contributing
-Contributions to DeepSearchLite are welcome! If you have an idea, bug report, or feature request, please open an issue on the [GitHub repository](https://github.com/ibadrather/DeepSearchLite). If you'd like to contribute code, please fork the repository and submit a pull request.
+Contributions to deep-search-lite are welcome! If you have an idea, bug report, or feature request, please open an issue on the [GitHub repository](https://github.com/ibadrather/deep-search-lite). If you'd like to contribute code, please fork the repository and submit a pull request.
 
 ## License
-DeepSearchLite is released under the [MIT License](https://github.com/yourusername/DeepSearchLite/blob/main/LICENSE).
+deep-search-lite is released under the [MIT License](https://github.com/yourusername/deep-search-lite/blob/main/LICENSE).
 
 ------------------

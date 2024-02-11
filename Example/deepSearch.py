@@ -1,10 +1,7 @@
 import os
-import sys
 from PIL import Image
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-
-from DeepSearchLite.DeepSearchLite import LoadData, SearchSetup
+from deepsearchlite import LoadData, SearchSetup
 from Example.FeatureExtractor import CustomFeatureExtractor
 
 os.system("clear")
@@ -67,7 +64,5 @@ similar_images = search_engine.get_similar_items(
     return_paths=True,
 )
 
-print(
-    "Similar Images by inputing an image after adding new image:", len(similar_images)
-)
+print("Similar Images by inputing an image after adding new image:", len(similar_images))
 print(similar_images)

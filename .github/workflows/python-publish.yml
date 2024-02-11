@@ -11,7 +11,7 @@ name: Upload Python Package
 on:
   # Trigger the workflow on push
   push:
-    branches: 
+    branches:
       # Push events on main branch
       - main
 

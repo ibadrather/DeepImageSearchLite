@@ -108,7 +108,8 @@ class LoadData:
 
 
 class SearchSetup:
-    """A class for setting up and running similarity search for various data types (e.g., images, videos, texts, etc.)."""
+    """A class for setting up and running similarity search for various data types
+    (e.g., images, videos, texts, etc.)."""
 
     def __init__(
         self,
@@ -126,7 +127,8 @@ class SearchSetup:
         Parameters:
         -----------
         item_list : List[str]
-            A list of items to be indexed and searched. The items can be any type of data (e.g., images, videos, texts, etc.).
+            A list of items to be indexed and searched. The items can be any type of data
+              (e.g., images, videos, texts, etc.).
         feature_extractor : Callable, optional
             Custom model for feature extraction (default=None).
         dim_reduction : Callable, optional
@@ -138,7 +140,8 @@ class SearchSetup:
         mode : str, optional
             The mode to run the search in. Can be either "index" or "search" (default="index").
         item_loader : Callable, optional
-            Custom function to load items from file paths. If None, the default image item loader is used (default=None).
+            Custom function to load items from file paths. If None, the default image item loader
+            is used (default=None).
         """
         self.item_data = pd.DataFrame()
         self.model_name = feature_extractor_name
@@ -166,9 +169,7 @@ class SearchSetup:
         else:
             raise ValueError("Invalid mode. Must be 'index' or 'search'.")
 
-    def _image_item_loader(
-        self, image_path: str, image_size: tuple = (224, 224)
-    ) -> Image.Image:
+    def _image_item_loader(self, image_path: str, image_size: tuple = (224, 224)) -> Image.Image:
         """Load an image from a file path."""
         return Image.open(image_path).resize(image_size).convert("RGB")
 
@@ -221,12 +222,11 @@ class SearchSetup:
         item_data["features"] = f_data
         item_data = item_data.dropna().reset_index(drop=True)
 
-        item_data.to_pickle(
-            item_data_with_features_pkl(self.metadata_dir, self.model_name)
-        )
+        item_data.to_pickle(item_data_with_features_pkl(self.metadata_dir, self.model_name))
 
         print(
-            f"\033[94m Item Meta Information Saved: {os.path.join(self.metadata_dir, self.model_name, 'item_data_features.pkl')}"
+            "\033[94m Item Meta Information Saved:"
+            f" {os.path.join(self.metadata_dir, self.model_name, 'item_data_features.pkl')}"
         )
         return item_data
 
@@ -237,9 +237,7 @@ class SearchSetup:
         index = faiss.IndexFlatL2(d)
         features_matrix = np.vstack(item_data["features"].values).astype(np.float32)
         index.add(features_matrix)  # Add the features matrix to the index
-        faiss.write_index(
-            index, item_features_vectors_idx(self.metadata_dir, self.model_name)
-        )
+        faiss.write_index(index, item_features_vectors_idx(self.metadata_dir, self.model_name))
 
         print(
             "\033[94m Saved The Indexed File:"
@@ -255,7 +253,8 @@ class SearchSetup:
             self._start_indexing(data)
         else:
             user_input = input(
-                "\033[91m Metadata and Features are already present, Do you want Extract Again? Enter yes or no: "
+                "\033[91m Metadata and Features are already present,"
+                " Do you want Extract Again? Enter yes or no: "
             )
 
             if user_input.lower() == "yes":
@@ -282,9 +281,7 @@ class SearchSetup:
         self.item_data = pd.read_pickle(
             item_data_with_features_pkl(self.metadata_dir, self.model_name)
         )
-        index = faiss.read_index(
-            item_features_vectors_idx(self.metadata_dir, self.model_name)
-        )
+        index = faiss.read_index(item_features_vectors_idx(self.metadata_dir, self.model_name))
 
         for new_item_path in tqdm(new_item_paths):
             # Extract features from the new item
@@ -296,32 +293,23 @@ class SearchSetup:
                 continue
 
             # Add the new item to the metadata
-            new_metadata = pd.DataFrame(
-                {"items_paths": [new_item_path], "features": [feature]}
-            )
-            self.item_data = pd.concat(
-                [self.item_data, new_metadata], axis=0, ignore_index=True
-            )
+            new_metadata = pd.DataFrame({"items_paths": [new_item_path], "features": [feature]})
+            self.item_data = pd.concat([self.item_data, new_metadata], axis=0, ignore_index=True)
 
             # Add the new item to the index
             index.add(np.array([feature], dtype=np.float32))
 
         # Save the updated metadata and index
-        self.item_data.to_pickle(
-            item_data_with_features_pkl(self.metadata_dir, self.model_name)
-        )
-        faiss.write_index(
-            index, item_features_vectors_idx(self.metadata_dir, self.model_name)
-        )
+        self.item_data.to_pickle(item_data_with_features_pkl(self.metadata_dir, self.model_name))
+        faiss.write_index(index, item_features_vectors_idx(self.metadata_dir, self.model_name))
 
         print(f"\033[92m New items added to the index: {len(new_item_paths)}")
 
     def _search_by_vector(self, v: np.ndarray, n: int) -> Dict[int, str]:
-        index = faiss.read_index(
-            item_features_vectors_idx(self.metadata_dir, self.model_name)
-        )
-        D, I = index.search(np.array([v], dtype=np.float32), n)
-        return dict(zip(I[0], self.item_data.iloc[I[0]]["items_paths"].to_list()))
+        index = faiss.read_index(item_features_vectors_idx(self.metadata_dir, self.model_name))
+        # TODO: There was an I here it was replaced by Index. Check if it is correct.
+        D, Index = index.search(np.array([v], dtype=np.float32), n)
+        return dict(zip(Index[0], self.item_data.iloc[Index[0]]["items_paths"].to_list()))
 
     def get_item_metadata_file(self) -> pd.DataFrame:
         """
@@ -332,9 +320,7 @@ class SearchSetup:
         DataFrame
             The Panda DataFrame of the metadata file.
         """
-        item_data = pd.read_pickle(
-            item_data_with_features_pkl(self.metadata_dir, self.model_name)
-        )
+        item_data = pd.read_pickle(item_data_with_features_pkl(self.metadata_dir, self.model_name))
         return item_data
 
     def load_metadata(self):
@@ -394,9 +380,7 @@ class SearchSetup:
             is raised with a message indicating that the item is not a valid file path.
         """
         # We first load the item
-        if isinstance(
-            item, str
-        ):  # If the item is a string, we assume it is a path to a file
+        if isinstance(item, str):  # If the item is a string, we assume it is a path to a file
             if os.path.isfile(item):
                 item = self.item_loader(item)
             else:
