@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 from typing import Any
 from typing import Callable
 from typing import Dict
@@ -12,105 +13,8 @@ import pandas as pd
 from PIL import Image
 from tqdm import tqdm
 
-
-def item_data_with_features_pkl(metadata_dir, model_name):
-    data_dir = os.path.join(metadata_dir, f"{model_name}")
-
-    # Create the directory if it does not exist
-    os.makedirs(data_dir, exist_ok=True)
-
-    item_data_with_features_pkl = os.path.join(data_dir, "item_data_features.pkl")
-    return item_data_with_features_pkl
-
-
-def item_features_vectors_idx(metadata_dir, model_name):
-    data_dir = os.path.join(metadata_dir, f"{model_name}")
-
-    # Create the directory if it does not exist
-    os.makedirs(data_dir, exist_ok=True)
-
-    item_features_vectors_idx = os.path.join(data_dir, "item_features_vectors.idx")
-    return item_features_vectors_idx
-
-
-class LoadData:
-    """A class for loading data from single/multiple folders or a CSV file."""
-
-    def __init__(self, data_type: str = "image"):
-        """
-        Initializes an instance of LoadData class.
-
-        Parameters:
-        -----------
-        data_type : str, optional (default='image')
-            The type of data to load. Supported types: 'image', 'video', 'text', etc.
-        """
-        self.data_type = data_type
-
-    def from_folder(self, folder_list: list) -> List[str]:
-        """
-        Adds data files from the specified folders to the data_list.
-
-        Parameters:
-        -----------
-        folder_list : list
-            A list of paths to the folders containing data files to be added to the data_list.
-
-        Returns:
-        --------
-        data_paths : list
-            A list of paths to the loaded data files.
-        """
-        self.folder_list = folder_list
-        data_paths = []
-        for folder in self.folder_list:
-            for root, dirs, files in os.walk(folder):
-                for file in files:
-                    if self._is_supported_file(file):
-                        data_paths.append(os.path.join(root, file))
-        return data_paths
-
-    def _is_supported_file(self, file: str) -> bool:
-        """
-        Checks if a file has a supported extension based on the data_type.
-
-        Parameters:
-        -----------
-        file : str
-            The file name to check for supported extensions.
-
-        Returns:
-        --------
-        bool
-            True if the file has a supported extension, False otherwise.
-        """
-        if self.data_type == "image":
-            return file.lower().endswith((".png", ".jpg", ".jpeg", ".gif", ".bmp"))
-
-        # TODO: Add other data types (e.g., video, text, etc.) and their supported extensions
-
-        # Add other data types (e.g., video, text, etc.) and their supported extensions
-        # elif self.data_type == 'video':
-        #     return file.lower().endswith((".mp4", ".avi", ".mov", ".mkv"))
-        # elif self.data_type == 'text':
-        #     return file.lower().endswith((".txt", ".csv", ".tsv", ".json"))
-        else:
-            raise ValueError(f"Unsupported data type: {self.data_type}")
-
-    def from_csv(self, csv_file_path: str, items_column_name: str):
-        """
-        Adds items from the specified column of a CSV file to the item_list.
-
-        Parameters:
-        -----------
-        csv_file_path : str
-            The path to the CSV file.
-        items_column_name : str
-            The name of the column containing the paths to the items to be added to the item_list.
-        """
-        self.csv_file_path = csv_file_path
-        self.items_column_name = items_column_name
-        return pd.read_csv(self.csv_file_path)[self.items_column_name].to_list()
+from deepsearchlite.utils import item_data_with_features_pkl
+from deepsearchlite.utils import item_features_vectors_idx
 
 
 class SearchSetup:
@@ -119,7 +23,7 @@ class SearchSetup:
 
     def __init__(
         self,
-        item_list: List[str],
+        item_list: List[Path],
         feature_extractor: Optional[Callable] = None,
         dim_reduction: Optional[Callable] = None,
         metadata_dir: Optional[str] = "metadata_dir",
