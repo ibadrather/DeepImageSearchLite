@@ -1,7 +1,9 @@
 import os
+
 from PIL import Image
 
-from deepsearchlite import LoadData, SearchSetup
+from deepsearchlite import LoadData
+from deepsearchlite import SearchSetup
 from Example.FeatureExtractor import CustomFeatureExtractor
 
 os.system("clear")

@@ -1,6 +1,7 @@
 import logging
-from concurrent_log_handler import ConcurrentRotatingFileHandler
 from pathlib import Path
+
+from concurrent_log_handler import ConcurrentRotatingFileHandler
 
 
 def setup_logger(log_file: Path) -> logging.Logger:

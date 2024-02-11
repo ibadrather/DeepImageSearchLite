@@ -1,10 +1,16 @@
 import os
+from typing import Any
+from typing import Callable
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Union
+
+import faiss
+import numpy as np
 import pandas as pd
 from PIL import Image
 from tqdm import tqdm
-import numpy as np
-import faiss
-from typing import List, Union, Dict, Callable, Optional, Any
 
 
 def item_data_with_features_pkl(metadata_dir, model_name):
